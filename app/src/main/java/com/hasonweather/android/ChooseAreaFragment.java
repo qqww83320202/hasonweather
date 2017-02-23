@@ -2,8 +2,10 @@ package com.hasonweather.android;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 import com.hasonweather.android.db.City;
 import com.hasonweather.android.db.County;
 import com.hasonweather.android.db.Province;
+import com.hasonweather.android.service.AutoUpdateService;
 import com.hasonweather.android.util.HttpUtil;
 import com.hasonweather.android.util.Utility;
 
@@ -29,6 +32,8 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
+
+import static android.R.attr.start;
 
 /**
  * Created by yhx11 on 2017/2/21.
@@ -68,15 +73,18 @@ public class ChooseAreaFragment extends Fragment {
      * 当前选中的级别
      */
     private int currentLevel;
+    private Button swtichButton;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState){
         View view=inflater.inflate(R.layout.choose_area,container,false);
         titleText=(TextView)view.findViewById(R.id.title_text);
         backButton=(Button)view.findViewById(R.id.back_button);
+swtichButton=(Button)view.findViewById(R.id.swtich_service);
         listView=(ListView)view.findViewById(R.id.list_view);
         adapter=new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,dataList);
         listView.setAdapter(adapter);
+
         return view;
     }
     @Override
@@ -119,6 +127,21 @@ public class ChooseAreaFragment extends Fragment {
                 }
             }
         });
+        swtichButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent=new Intent(getActivity(),AutoUpdateService.class);
+                        getActivity().startService(intent);
+                        Toast.makeText(getContext(),"自动更新天气已开启！",Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            }
+        });
+
         queryProvinces();
     }
     /**
@@ -174,11 +197,14 @@ public class ChooseAreaFragment extends Fragment {
         if (countyList.size()>0){
             dataList.clear();
             for (County county :countyList){
+                Log.d("ChooseAreaFragment",county.getCountyName());
                 dataList.add(county.getCountyName());
+               
             }
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
             currentLevel=LEVEL_COUNTY;
+
         } else {
             int provinceCode=selectedProvince.getProvinceCode();
             int cityCode=selectedCity.getCityCode();

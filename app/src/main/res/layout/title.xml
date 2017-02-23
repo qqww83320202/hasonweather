@@ -11,6 +11,7 @@
         android:layout_centerVertical="true"
         android:text="切换"
         android:textSize="6sp"
+        android:textColor="#fff"
         android:background="@drawable/r4"
         />
 <TextView
